@@ -1,0 +1,258 @@
+---
+globs: app/pages/**/*.vue,app/app.vue
+alwaysApply: false
+---
+
+## UI Form Component Rules
+
+## Basic Form Setup with Zod
+
+Use Zod for schema validation with proper TypeScript typing:
+
+```vue
+<script setup lang="ts">
+import * as z from 'zod'
+import type { FormSubmitEvent } from '@nuxt/ui'
+
+const schema = z.object({
+  email: z.string().email('Invalid email'),
+  password: z.string().min(8, 'Must be at least 8 characters')
+})
+
+type Schema = z.output<typeof schema>
+
+const state = reactive<Partial<Schema>>({
+  email: undefined,
+  password: undefined
+})
+
+const toast = useToast()
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+  toast.add({ title: 'Success', description: 'Form submitted!', color: 'success' })
+  console.log(event.data)
+}
+</script>
+
+<template>
+  <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
+    <UFormField label="Email" name="email">
+      <UInput v-model="state.email" />
+    </UFormField>
+
+    <UFormField label="Password" name="password">
+      <UInput v-model="state.password" type="password" />
+    </UFormField>
+
+    <UButton type="submit">Submit</UButton>
+  </UForm>
+</template>
+```
+
+## Form Field Types
+
+Common form field patterns with Zod validation:
+
+```vue
+<script setup lang="ts">
+import * as z from 'zod'
+
+const schema = z.object({
+  // Text inputs
+  name: z.string().min(2, 'Name required'),
+  email: z.string().email('Invalid email'),
+  
+  // Numbers
+  age: z.number().min(18, 'Must be 18+'),
+  
+  // Booleans
+  newsletter: z.boolean(),
+  terms: z.boolean().refine(val => val === true, 'Must accept terms'),
+  
+  // Select options
+  country: z.string().min(1, 'Please select a country'),
+  
+  // Arrays
+  skills: z.array(z.string()).min(1, 'Select at least one skill'),
+  
+  // Files
+  avatar: z.instanceof(File).optional()
+})
+
+type Schema = z.output<typeof schema>
+const state = reactive<Partial<Schema>>({})
+</script>
+
+<template>
+  <UForm :schema="schema" :state="state" @submit="onSubmit">
+    <UFormField label="Name" name="name">
+      <UInput v-model="state.name" />
+    </UFormField>
+    
+    <UFormField label="Age" name="age">
+      <UInputNumber v-model="state.age" />
+    </UFormField>
+    
+    <UFormField name="newsletter">
+      <UCheckbox v-model="state.newsletter" label="Subscribe to newsletter" />
+    </UFormField>
+    
+    <UFormField label="Country" name="country">
+      <USelect v-model="state.country" :items="countries" />
+    </UFormField>
+    
+    <UFormField label="Skills" name="skills">
+      <USelectMenu v-model="state.skills" multiple :items="skillOptions" />
+    </UFormField>
+    
+    <UButton type="submit">Submit</UButton>
+  </UForm>
+</template>
+```
+
+## Custom Validation
+
+Use the `validate` prop for complex validation logic:
+
+```vue
+<script setup lang="ts">
+import type { FormError, FormSubmitEvent } from '@nuxt/ui'
+
+const state = reactive({
+  password: '',
+  confirmPassword: ''
+})
+
+const validate = (state: any): FormError[] => {
+  const errors = []
+  if (!state.password) errors.push({ name: 'password', message: 'Required' })
+  if (state.password !== state.confirmPassword) {
+    errors.push({ name: 'confirmPassword', message: 'Passwords do not match' })
+  }
+  return errors
+}
+
+async function onSubmit(event: FormSubmitEvent<typeof state>) {
+  // Handle submission
+}
+</script>
+
+<template>
+  <UForm :validate="validate" :state="state" @submit="onSubmit">
+    <UFormField label="Password" name="password">
+      <UInput v-model="state.password" type="password" />
+    </UFormField>
+    
+    <UFormField label="Confirm Password" name="confirmPassword">
+      <UInput v-model="state.confirmPassword" type="password" />
+    </UFormField>
+    
+    <UButton type="submit">Submit</UButton>
+  </UForm>
+</template>
+```
+
+## Form Methods & Error Handling
+
+Access form methods using template refs:
+
+```vue
+<script setup lang="ts">
+import type { FormErrorEvent } from '@nuxt/ui'
+
+const form = useTemplateRef('form')
+
+async function onError(event: FormErrorEvent) {
+  // Focus first error field
+  if (event?.errors?.[0]?.id) {
+    const element = document.getElementById(event.errors[0].id)
+    element?.focus()
+    element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+}
+
+function clearForm() {
+  form.value?.clear()
+}
+
+async function validateForm() {
+  try {
+    await form.value?.validate()
+    console.log('Form is valid')
+  } catch (error) {
+    console.log('Form has errors')
+  }
+}
+</script>
+
+<template>
+  <UForm 
+    ref="form" 
+    :schema="schema" 
+    :state="state" 
+    @submit="onSubmit"
+    @error="onError"
+  >
+    <!-- Form fields -->
+    
+    <div class="flex gap-2">
+      <UButton type="submit">Submit</UButton>
+      <UButton variant="outline" @click="clearForm">Clear</UButton>
+      <UButton variant="ghost" @click="validateForm">Validate</UButton>
+    </div>
+  </UForm>
+</template>
+```
+
+## Nested Forms
+
+For complex forms with conditional fields:
+
+```vue
+<script setup lang="ts">
+const schema = z.object({
+  hasAddress: z.boolean(),
+  name: z.string().min(1)
+})
+
+const addressSchema = z.object({
+  street: z.string().min(1, 'Street required'),
+  city: z.string().min(1, 'City required')
+})
+
+const state = reactive<Partial<Schema & AddressSchema>>({})
+</script>
+
+<template>
+  <UForm :schema="schema" :state="state" @submit="onSubmit">
+    <UFormField label="Name" name="name">
+      <UInput v-model="state.name" />
+    </UFormField>
+    
+    <UFormField name="hasAddress">
+      <UCheckbox v-model="state.hasAddress" label="Add address" />
+    </UFormField>
+    
+    <UForm v-if="state.hasAddress" :schema="addressSchema" nested>
+      <UFormField label="Street" name="street">
+        <UInput v-model="state.street" />
+      </UFormField>
+      
+      <UFormField label="City" name="city">
+        <UInput v-model="state.city" />
+      </UFormField>
+    </UForm>
+    
+    <UButton type="submit">Submit</UButton>
+  </UForm>
+</template>
+```
+
+## Key Guidelines
+
+- Always use TypeScript with `z.output<typeof schema>` for type safety
+- Use `reactive<Partial<Schema>>({})` for form state
+- Handle form submission with `FormSubmitEvent<Schema>`
+- Use `UFormField` with `name` prop that matches schema keys
+- Access form methods via template refs: `const form = useTemplateRef('form')`
+- Common validation: `validate-on` prop controls when validation triggers
+- Error handling: Listen to `@error` event for custom error handling
