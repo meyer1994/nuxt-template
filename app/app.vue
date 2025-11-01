@@ -7,9 +7,9 @@ const { data, refresh } = $trpc.users.list.useQuery()
   <UApp>
     <div class="flex flex-col gap-4 p-4">
       <FormUser
-        @submit="e => {
-          $trpc.users.create.mutate(e)
-          refresh()
+        @submit="async (e) => {
+          await $trpc.users.create.mutate(e)
+          await refresh()
         }"
       />
       <TableUsers
