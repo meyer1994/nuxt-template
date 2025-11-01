@@ -2,11 +2,10 @@
 import type { AppRouterOutputs } from '@@/server/trpc'
 import type { TableColumn } from '@nuxt/ui'
 
-type Item = AppRouterOutputs['create']
+type Item = AppRouterOutputs['users']['list'][number]
 
 type Props = {
   items: Item[]
-  filter?: string
   loading?: boolean
 }
 
@@ -116,8 +115,6 @@ const table = useTemplateRef('table')
       v-model:column-visibility="visible"
       :loading="props.loading"
       loading-animation="carousel"
-      :filter="props.filter"
-      :global-filter="filter"
       :columns="columns"
       :data="props.items"
       :sticky="true"
