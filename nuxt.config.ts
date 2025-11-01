@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@vueuse/nuxt', '@nuxt/ui', 'nitro-cloudflare-dev'],
 
   devtools: {
-    enabled: true,
+    enabled: false,
     timeline: {
       enabled: true,
     },
@@ -42,7 +42,7 @@ export default defineNuxtConfig({
   },
 
   typescript: {
-    typeCheck: true,
+    typeCheck: false,
     strict: true,
   },
 

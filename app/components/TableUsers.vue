@@ -2,7 +2,7 @@
 import type { AppRouterOutputs } from '@@/server/trpc'
 import type { TableColumn } from '@nuxt/ui'
 
-type Item = AppRouterOutputs['node']['list'][number]
+type Item = AppRouterOutputs['create']
 
 type Props = {
   items: Item[]
@@ -12,9 +12,9 @@ type Props = {
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  'update-node': [node: Item]
-  'delete-node': [node: Item]
-  'select-node': [node: Item]
+  'update-user': [user: Item]
+  'delete-user': [user: Item]
+  'select-user': [user: Item]
   'refresh-table': []
 }>()
 
@@ -28,14 +28,9 @@ const columns: TableColumn<Item>[] = [
     header: 'ID',
   },
   {
-    id: 'parentId' as const,
-    accessorKey: 'parentId',
-    header: 'Parent ID',
-  },
-  {
-    id: 'data' as const,
-    accessorKey: 'data',
-    header: 'Data',
+    id: 'name' as const,
+    accessorKey: 'name',
+    header: 'Name',
   },
   {
     id: 'createdAt' as const,
@@ -59,8 +54,7 @@ const MAP_ID_TO_LABEL: Record<string, string> = columns
 // State for column visibility
 const visible: Ref<Record<Keys, boolean>> = ref({
   id: true,
-  parentId: true,
-  data: true,
+  name: true,
   createdAt: true,
   updatedAt: false,
   actions: true,
@@ -129,54 +123,48 @@ const table = useTemplateRef('table')
       :sticky="true"
       :empty-state="{
         icon: 'i-lucide-box',
-        label: 'Nenhum node encontrado',
+        label: 'No users found',
       }"
       :ui="{
         tr: 'hover:bg-muted cursor-pointer',
       }"
       class="flex-1"
-      @select="e => emit('select-node', e.original)"
+      @select="e => emit('select-user', e.original)"
     >
       <!-- ID Column -->
       <template #id-cell="{ row }">
         <span class="font-bold font-mono text-sm">
-          #{{ row.original.id.substring(0, 8) }}
+          {{ row.original?.id
+            ? `#${row.original.id.substring(0, 8)}`
+            : 'N/A' }}
         </span>
       </template>
 
-      <!-- Parent ID Column -->
-      <template #parentId-cell="{ row }">
-        <span class="font-mono text-sm">
-          {{ row.original.parentId || 'N/A' }}
-        </span>
-      </template>
-
-      <!-- Data Column -->
-      <template #data-cell="{ row }">
-        <span
-          class="text-sm"
-          :title="JSON.stringify(row.original.data)"
-        >
-          {{ JSON.stringify(row.original.data).length >= 30
-            ? JSON.stringify(row.original.data).substring(0, 27) + '...'
-            : JSON.stringify(row.original.data) }}
+      <!-- Name Column -->
+      <template #name-cell="{ row }">
+        <span class="text-sm">
+          {{ row.original?.name || 'N/A' }}
         </span>
       </template>
 
       <!-- Created At Column -->
       <template #createdAt-cell="{ row }">
         <NuxtTime
+          v-if="row.original?.createdAt"
           :datetime="row.original.createdAt"
           title
         />
+        <span v-else>N/A</span>
       </template>
 
       <!-- Updated At Column -->
       <template #updatedAt-cell="{ row }">
         <NuxtTime
+          v-if="row.original?.updatedAt"
           :datetime="row.original.updatedAt"
           title
         />
+        <span v-else>N/A</span>
       </template>
 
       <!-- Actions Column -->
@@ -187,8 +175,8 @@ const table = useTemplateRef('table')
             color="error"
             variant="ghost"
             size="sm"
-            title="Excluir node"
-            @click="emit('delete-node', row.original)"
+            title="Delete user"
+            @click="emit('delete-user', row.original)"
           />
         </div>
       </template>
