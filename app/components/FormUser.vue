@@ -11,9 +11,9 @@ export type FormNameData = Schema
 
 const props = withDefaults(defineProps<Props>(), { defaultValue: () => ({}) })
 const state = reactive<Partial<Schema>>({ name: props.defaultValue?.name ?? '' })
+watch(() => props.defaultValue, v => v && Object.assign(state, v))
 
 const emits = defineEmits<{ submit: [e: Schema] }>()
-watch(() => props.defaultValue, v => v && Object.assign(state, v))
 </script>
 
 <template>
