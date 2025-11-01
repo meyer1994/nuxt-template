@@ -1,3 +1,4 @@
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
 import { baseProcedure, createTRPCRouter } from '../utils/trpc'
 import { router as executionsRouter } from './executions'
 import { router as nodesRouter } from './nodes'
@@ -18,3 +19,5 @@ export const appRouter = createTRPCRouter({
 
 // export type definition of API
 export type AppRouter = typeof appRouter
+export type AppRouterInputs = inferRouterInputs<AppRouter>
+export type AppRouterOutputs = inferRouterOutputs<AppRouter>

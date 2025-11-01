@@ -28,45 +28,16 @@ const nodes = ref<Node[]>([
 
 const edges = ref<Edge[]>([])
 
-// Table columns for nodes
-const nodesColumns = [
-  {
-    key: 'id',
-    label: 'ID',
-  },
-  {
-    key: 'parentId',
-    label: 'Parent ID',
-  },
-  {
-    key: 'data',
-    label: 'Data',
-  },
-  {
-    key: 'createdAt',
-    label: 'Created At',
-  },
-]
+// Handle table events
+const handleDeleteNode = async (node: NonNullable<typeof nodesData.value>[number]) => {
+  await $trpc.node.delete.mutate({ id: node.id })
+  await refreshNodes()
+}
 
-// Table columns for executions
-const executionsColumns = [
-  {
-    key: 'id',
-    label: 'ID',
-  },
-  {
-    key: 'nodeId',
-    label: 'Node ID',
-  },
-  {
-    key: 'status',
-    label: 'Status',
-  },
-  {
-    key: 'createdAt',
-    label: 'Created At',
-  },
-]
+const handleCancelExecution = async (execution: NonNullable<typeof executionsData.value>[number]) => {
+  await $trpc.execution.cancel.mutate({ id: execution.id })
+  await refreshExecutions()
+}
 </script>
 
 <template>
@@ -79,9 +50,10 @@ const executionsColumns = [
           <h2 class="text-lg font-semibold mb-2">
             Nodes
           </h2>
-          <UTable
-            :rows="nodesData || []"
-            :columns="nodesColumns"
+          <TableNodes
+            :items="nodesData || []"
+            @delete-node="handleDeleteNode"
+            @refresh-table="refreshNodes"
           />
         </div>
 
@@ -90,9 +62,10 @@ const executionsColumns = [
           <h2 class="text-lg font-semibold mb-2">
             Executions
           </h2>
-          <UTable
-            :rows="executionsData || []"
-            :columns="executionsColumns"
+          <TableExecutions
+            :items="executionsData || []"
+            @cancel-execution="handleCancelExecution"
+            @refresh-table="refreshExecutions"
           />
         </div>
       </div>

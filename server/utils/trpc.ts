@@ -7,7 +7,8 @@ export const createTRPCContext = async (event: H3Event) => {
   /**
   * @see: https://trpc.io/docs/server/context
   */
-  return { event, db: event.context.db } as { event: H3Event, db: DrizzleD1Database<typeof schema> }
+  type Context = { event: H3Event, db: DrizzleD1Database<typeof schema> }
+  return { event, db: event.context.db } as Context
 }
 
 type Context = Awaited<ReturnType<typeof createTRPCContext>>
